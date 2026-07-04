@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>チラシ管理台帳</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1B2A3D;
+    --navy-deep:#152131;
+    --paper:#F5F0E3;
+    --paper-2:#EFE7D4;
+    --ink:#2A2118;
+    --ink-soft:#5A5042;
+    --line:#D9CDAF;
+    --red:#B23A2E;
+    --blue:#3E5C77;
+    --green:#5C7A56;
+    --gray:#7A7266;
+    --gold:#B9862F;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Noto Sans JP',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{max-width:920px;margin:0 auto;padding:0 0 60px;}
+
+  /* Header */
+  header{
+    background:var(--navy);
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 40px);
+    color:var(--paper);
+    padding:28px 20px 22px;
+    position:relative;
+  }
+  header .eyebrow{
+    font-size:11px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:#9FB0C4;
+    margin:0 0 6px;
+    font-weight:600;
+  }
+  header h1{
+    font-family:'Shippori Mincho',serif;
+    font-weight:800;
+    font-size:28px;
+    margin:0;
+    letter-spacing:.03em;
+  }
+  header .sub{
+    margin:8px 0 0;
+    font-size:12.5px;
+    color:#B7C2CF;
+  }
+  header .count-badge{
+    position:absolute;
+    right:20px;
+    top:26px;
+    text-align:right;
+    font-family:'Shippori Mincho',serif;
+  }
+  header .count-badge .num{font-size:26px;font-weight:800;color:#E9E1CD;}
+  header .count-badge .lbl{font-size:10px;letter-spacing:.1em;color:#9FB0C4;}
+
+  /* Search */
+  .search-wrap{
+    padding:18px 20px 0;
+  }
+  .search-box{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:#FFFDF7;
+    border:1.5px solid var(--line);
+    border-radius:3px;
+    padding:11px 14px;
+    box-shadow:0 1px 0 rgba(0,0,0,0.03);
+  }
+  .search-box svg{flex:none;opacity:.55;}
+  .search-box input{
+    border:none;outline:none;background:transparent;
+    font-family:'Noto Sans JP',sans-serif;
+    font-size:15px;
+    width:100%;
+    color:var(--ink);
+  }
+  .search-box input::placeholder{color:#A79E8C;}
+  .clear-btn{
+    background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:13px;
+    padding:2px 6px;flex:none;
+  }
+
+  /* Filter tabs (folder tabs) */
+  .tabs-row{
+    display:flex;
+    gap:6px;
+    padding:16px 20px 0;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  .tabs-row::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:none;
+    font-family:'Noto Sans JP',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    padding:9px 14px 8px;
+    border-radius:6px 6px 0 0;
+    cursor:pointer;
+    border:1.5px solid transparent;
+    border-bottom:none;
+    color:var(--ink-soft);
+    background:var(--paper-2);
+    white-space:nowrap;
+    transition:transform .12s ease;
+    position:relative;
+    top:1px;
+  }
+  .tab:hover{transform:translateY(-1px);}
+  .tab.active{
+    background:#FFFDF7;
+    color:var(--ink);
+    border-color:var(--line);
+    box-shadow:0 -2px 4px rgba(0,0,0,0.03);
+  }
+  .tab .dot{
+    display:inline-block;width:7px;height:7px;border-radius:50%;
+    margin-right:6px;vertical-align:middle;margin-bottom:1px;
+  }
+
+  .status-row{
+    display:flex;
+    gap:8px;
+    padding:10px 20px 0;
+    flex-wrap:wrap;
+    border-bottom:1.5px solid var(--line);
+    padding-bottom:14px;
+    background:#FFFDF7;
+    margin:0;
+  }
+  .chip{
+    font-size:12px;
+    font-weight:600;
+    padding:5px 11px;
+    border-radius:20px;
+    border:1.3px solid var(--line);
+    background:transparent;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .chip.active{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:var(--paper);
+  }
+
+  /* Toolbar */
+  .toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px 20px 6px;
+  }
+  .result-label{font-size:12.5px;color:var(--ink-soft);}
+  .add-btn{
+    font-family:'Noto Sans JP',sans-serif;
+    font-weight:700;
+    font-size:13.5px;
+    background:var(--navy);
+    color:var(--paper);
+    border:none;
+    padding:10px 16px;
+    border-radius:4px;
+    cursor:pointer;
+    display:flex;align-items:center;gap:6px;
+  }
+  .add-btn:hover{background:var(--navy-deep);}
+
+  .backup-row{
+    display:flex;gap:8px;padding:2px 20px 4px;flex-wrap:wrap;
+  }
+  .backup-btn{
+    font-family:'Noto Sans JP',sans-serif;
+    font-size:12px;font-weight:600;
+    background:transparent;
+    color:var(--ink-soft);
+    border:1.3px solid var(--line);
+    padding:7px 11px;
+    border-radius:5px;
+    cursor:pointer;
+  }
+  .backup-btn:hover{background:var(--paper-2);color:var(--ink);}
+  .sync-note{
+    padding:0 20px 8px;
+    font-size:11px;
+    color:var(--ink-soft);
+  }
+
+  /* List */
+  .list{padding:6px 20px 0;display:flex;flex-direction:column;gap:10px;}
+  .card{
+    background:#FFFDF7;
+    border:1.3px solid var(--line);
+    border-radius:5px;
+    padding:14px 14px 14px 0;
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+    position:relative;
+    overflow:hidden;
+  }
+  .card .stripe{
+    width:6px;align-self:stretch;flex:none;border-radius:5px 0 0 5px;
+  }
+  .seal{
+    flex:none;
+    width:44px;height:44px;
+    border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Shippori Mincho',serif;
+    font-weight:800;
+    font-size:16px;
+    color:#fff;
+    margin-top:2px;
+    overflow:hidden;
+    cursor:pointer;
+    position:relative;
+  }
+  .seal img{
+    width:100%;height:100%;object-fit:cover;display:block;
+  }
+  .card-body{flex:1;min-width:0;}
+  .card-top{
+    display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
+  }
+  .card-name{
+    font-family:'Shippori Mincho',serif;
+    font-weight:600;
+    font-size:16.5px;
+    color:var(--ink);
+    line-height:1.4;
+  }
+  .card-meta{
+    margin-top:5px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 10px;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .card-meta span{display:flex;align-items:center;gap:4px;}
+  .stock-warn{color:var(--red);font-weight:700;}
+  .stamp{
+    flex:none;
+    font-family:'Shippori Mincho',serif;
+    font-weight:800;
+    font-size:11px;
+    letter-spacing:.06em;
+    padding:5px 9px;
+    border:2px solid currentColor;
+    border-radius:3px;
+    transform:rotate(-3deg);
+    white-space:nowrap;
+  }
+  .card-actions{
+    display:flex;gap:4px;margin-left:8px;flex:none;
+  }
+  .icon-btn{
+    background:none;border:none;cursor:pointer;color:var(--ink-soft);
+    padding:5px;border-radius:4px;display:flex;
+  }
+  .icon-btn:hover{background:var(--paper-2);color:var(--ink);}
+
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--ink-soft);
+  }
+  .empty-state .glyph{font-size:34px;margin-bottom:10px;}
+  .empty-state p{font-size:14px;margin:4px 0;}
+
+  /* Modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(21,33,49,0.55);
+    display:flex;align-items:flex-end;justify-content:center;
+    z-index:50;
+    animation:fadeIn .15s ease;
+  }
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @media (min-width:640px){
+    .overlay{align-items:center;}
+  }
+  .modal{
+    background:var(--paper);
+    width:100%;max-width:480px;
+    max-height:90vh;
+    overflow-y:auto;
+    border-radius:12px 12px 0 0;
+    padding:22px 20px 26px;
+  }
+  @media (min-width:640px){
+    .modal{border-radius:10px;}
+  }
+  .modal h2{
+    font-family:'Shippori Mincho',serif;
+    font-size:19px;margin:0 0 16px;
+    color:var(--ink);
+  }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;font-size:12px;font-weight:700;color:var(--ink-soft);
+    margin-bottom:5px;letter-spacing:.03em;
+  }
+  .field input, .field select{
+    width:100%;
+    border:1.3px solid var(--line);
+    background:#FFFDF7;
+    border-radius:4px;
+    padding:10px 11px;
+    font-size:14.5px;
+    font-family:'Noto Sans JP',sans-serif;
+    color:var(--ink);
+    outline:none;
+  }
+  .field input:focus, .field select:focus{border-color:var(--navy);}
+  .field-row{display:flex;gap:10px;}
+  .field-row .field{flex:1;}
+  .image-field{
+    display:flex;align-items:center;gap:14px;margin-bottom:16px;
+  }
+  .image-preview{
+    width:64px;height:64px;border-radius:8px;flex:none;
+    background:var(--paper-2);
+    border:1.3px dashed var(--line);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    font-size:22px;color:var(--ink-soft);
+  }
+  .image-preview img{width:100%;height:100%;object-fit:cover;display:block;}
+  .image-btns{display:flex;flex-direction:column;gap:6px;}
+  .image-btns button{
+    font-family:'Noto Sans JP',sans-serif;
+    font-size:12.5px;font-weight:600;
+    background:transparent;
+    border:1.3px solid var(--line);
+    color:var(--ink-soft);
+    padding:7px 12px;border-radius:5px;cursor:pointer;
+  }
+  .image-btns button:hover{background:var(--paper-2);color:var(--ink);}
+  .image-btns .remove{color:var(--red);border-color:var(--red);}
+  .modal-actions{
+    display:flex;gap:10px;margin-top:18px;
+  }
+  .btn{
+    flex:1;
+    padding:12px;
+    border-radius:5px;
+    border:none;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    font-family:'Noto Sans JP',sans-serif;
+  }
+  .btn-primary{background:var(--navy);color:var(--paper);}
+  .btn-primary:hover{background:var(--navy-deep);}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1.3px solid var(--line);}
+  .btn-danger{background:transparent;color:var(--red);border:1.3px solid var(--red);}
+
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--navy);color:var(--paper);
+    padding:10px 18px;border-radius:20px;font-size:13px;font-weight:600;
+    box-shadow:0 6px 18px rgba(0,0,0,0.25);
+    z-index:60;
+    animation:fadeIn .15s ease;
+  }
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header>
+    <p class="eyebrow">Flyer &amp; Pamphlet Registry</p>
+    <h1>チラシ管理台帳</h1>
+    <p class="sub">検索してすぐ探せる、チラシ・パンフレットの在庫台帳</p>
+    <div class="count-badge">
+      <div class="num" id="totalCount">–</div>
+      <div class="lbl">件 登録</div>
+    </div>
+  </header>
+
+  <div class="search-wrap">
+    <div class="search-box">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text" placeholder="チラシ名・カテゴリー・年月で検索…" autocomplete="off">
+      <button class="clear-btn" id="clearSearch" style="display:none;">✕</button>
+    </div>
+  </div>
+
+  <div class="tabs-row" id="tabsRow"></div>
+  <div class="status-row" id="statusRow"></div>
+
+  <div class="toolbar">
+    <div class="result-label" id="resultLabel"></div>
+    <button class="add-btn" id="addBtn">＋ 新規チラシ</button>
+  </div>
+
+  <div class="backup-row" id="backupRow">
+    <button class="backup-btn" id="exportBtn">⬇ 台帳をファイルに保存</button>
+    <button class="backup-btn" id="importBtn">⬆ ファイルから読み込む</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none;">
+  </div>
+  <div class="sync-note" id="syncNote"></div>
+
+  <div class="list" id="list"></div>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+const CATS = [
+  {key:'group', label:'グループ', color:'#5C7A93'},
+  {key:'visit', label:'訪問', color:'#8A8478'},
+  {key:'dental', label:'歯科', color:'#5C8F6F'},
+  {key:'yuai', label:'ゆうあい', color:'#C0797A'},
+  {key:'seminar', label:'セミナー', color:'#B9862F'},
+  {key:'order', label:'注文書', color:'#7A7266'},
+];
+const STATUSES = [
+  {key:'distributing', label:'配布', color:'#B23A2E'},
+  {key:'pamphlet', label:'パンフレット', color:'#3E5C77'},
+  {key:'ended', label:'配布終了', color:'#7A7266'},
+  {key:'book', label:'書籍', color:'#5C7A56'},
+];
+const catByLabel = Object.fromEntries(CATS.map(c=>[c.label,c.key]));
+const statusByLabel = Object.fromEntries(STATUSES.map(s=>[s.label,s.key]));
+const catMap = Object.fromEntries(CATS.map(c=>[c.key,c]));
+const statusMap = Object.fromEntries(STATUSES.map(s=>[s.key,s]));
+
+const SEED = [
+  ['みっちゃん通信1号','2026.1','グループ',''],
+  ['みっちゃん通信2号','2026.4','グループ',''],
+  ['みっちゃん通信3号','2026.7','グループ',''],
+  ['訪問歯科診療','','訪問',''],
+  ['インプラント治療の案内','','歯科',''],
+  ['ホワイトニング','','歯科',''],
+  ['いがらしグループスタッフ募集','','歯科',''],
+  ['重度障がい者夜勤アルバイト募集','','ゆうあい',''],
+  ['重度障がい者夜勤アルバイト募集','2026.6','ゆうあい',''],
+  ['衛生士募集','','歯科',''],
+  ['清掃スタッフ募集','','歯科',''],
+  ['2026.5マックスセミナー','','セミナー','なし'],
+  ['フロントガード','','注文書',''],
+  ['インプラント実習セミナー','2022.5','セミナー','なし'],
+  ['総義歯人工歯排列コース','2026.1','セミナー','なし'],
+  ['印象採得コース2days','2025.11','セミナー','なし'],
+  ['高維持力機能総義歯セミナー','2025.11','セミナー','なし'],
+  ['重度訪問介護養成研修','2026.6','セミナー','2000'],
+  ['ゆうあい介護','','ゆうあい',''],
+  ['ゆうあい　訪問・介護','','ゆうあい',''],
+  ['デンタルハイジーン','2025.1.20','歯科','5'],
+].map((row, i)=>{
+  const statusLabels = ['配布','配布','配布','パンフレット','パンフレット','パンフレット','配布','配布','配布','配布','配布','配布終了','配布','配布終了','配布終了','配布終了','配布終了','配布','パンフレット','パンフレット','書籍'];
+  return {
+    id: 'seed-'+i,
+    name: row[0],
+    date: row[1],
+    category: catByLabel[row[2]] || 'order',
+    stock: row[3],
+    status: statusByLabel[statusLabels[i]] || 'distributing',
+  };
+});
+
+let flyers = [];
+let activeCat = 'all';
+let activeStatus = 'all';
+let query = '';
+let editingId = null;
+let storageAvailable = true;
+
+function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+function updateSyncNote(){
+  const el = document.getElementById('syncNote');
+  if(!el) return;
+  el.textContent = storageAvailable
+    ? '変更はこの画面に自動保存されます。念のため、こまめに「台帳をファイルに保存」しておくと安心です'
+    : '⚠ この環境では自動保存が動作しないため、必ず「台帳をファイルに保存」で控えを取ってください。次回はそのファイルを「読み込む」で復元できます';
+}
+
+async function loadData(){
+  let loadedFromStorage = false;
+  try{
+    const listRes = await window.storage.list('flyer-', true);
+    const keys = (listRes && listRes.keys) ? listRes.keys : [];
+    if(keys.length > 0){
+      const results = await Promise.all(keys.map(k =>
+        window.storage.get(k, true).catch(()=>null)
+      ));
+      const loaded = results.filter(Boolean).map(r => JSON.parse(r.value));
+      if(loaded.length > 0){ flyers = loaded; loadedFromStorage = true; }
+    }
+  }catch(e){
+    console.error('loadData failed', e);
+  }
+  if(!loadedFromStorage){
+    flyers = SEED.map(f=>Object.assign({}, f));
+  }
+  // Photos: best-effort only, never blocks the ledger from showing.
+  try{
+    await Promise.all(flyers.map(async f=>{
+      try{
+        const res = await window.storage.get('img-'+f.id, false);
+        if(res && res.value) f.image = res.value;
+      }catch(e){ /* none saved for this one */ }
+    }));
+  }catch(e){ /* ignore */ }
+
+  render();
+  updateSyncNote();
+
+  // Confirm whether background writes actually work, without blocking the UI.
+  syncFlyerInBackground(flyers[0], true);
+}
+
+// Fire-and-forget: updates local UI is never gated on this succeeding.
+function syncFlyerInBackground(f, silentProbe){
+  if(!f) return;
+  const forStorage = Object.assign({}, f);
+  delete forStorage.image;
+  window.storage.set('flyer-'+f.id, JSON.stringify(forStorage), true)
+    .then(res=>{
+      if(!res) throw new Error('empty-result');
+      storageAvailable = true;
+    })
+    .catch(e=>{
+      console.error('background sync failed', e);
+      storageAvailable = false;
+    })
+    .finally(()=> updateSyncNote());
+}
+
+async function deleteFlyerKeyBackground(id){
+  try{ await window.storage.delete('flyer-'+id, true); }
+  catch(e){ console.error('deleteFlyerKey failed', e); }
+  try{ await window.storage.delete('img-'+id, false); }
+  catch(e){ /* fine if it never existed */ }
+}
+
+function exportData(){
+  try{
+    const dataStr = JSON.stringify(flyers, null, 2);
+    const blob = new Blob([dataStr], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const stamp = new Date().toISOString().slice(0,10).replace(/-/g,'');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `チラシ台帳_${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=> URL.revokeObjectURL(url), 3000);
+    showToast('ファイルに保存しました');
+  }catch(e){
+    console.error('export failed', e);
+    showToast('書き出しに失敗しました');
+  }
+}
+
+function importDataFromFile(file){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const parsed = JSON.parse(e.target.result);
+      if(!Array.isArray(parsed)) throw new Error('not-array');
+      if(!confirm(`${parsed.length}件のデータを読み込みます。今の一覧は置き換えられます。よろしいですか？`)) return;
+      flyers = parsed;
+      render();
+      showToast('読み込みました');
+      flyers.forEach(f=> syncFlyerInBackground(f, false));
+    }catch(err){
+      console.error('import failed', err);
+      showToast('読み込みに失敗しました。正しいファイルか確認してください');
+    }
+  };
+  reader.onerror = ()=> showToast('ファイルの読み込みに失敗しました');
+  reader.readAsText(file);
+}
+
+function showToast(msg){
+  const root = document.getElementById('toastRoot');
+  root.innerHTML = `<div class="toast">${escapeHtml(msg)}</div>`;
+  setTimeout(()=>{ root.innerHTML=''; }, 2200);
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderTabs(){
+  const tabsRow = document.getElementById('tabsRow');
+  const all = `<div class="tab ${activeCat==='all'?'active':''}" data-cat="all">全て</div>`;
+  const rest = CATS.map(c=>`<div class="tab ${activeCat===c.key?'active':''}" data-cat="${c.key}"><span class="dot" style="background:${c.color}"></span>${c.label}</div>`).join('');
+  tabsRow.innerHTML = all + rest;
+  tabsRow.querySelectorAll('.tab').forEach(el=>{
+    el.addEventListener('click', ()=>{ activeCat = el.dataset.cat; render(); });
+  });
+
+  const statusRow = document.getElementById('statusRow');
+  const allChip = `<div class="chip ${activeStatus==='all'?'active':''}" data-st="all">全ステータス</div>`;
+  const chips = STATUSES.map(s=>`<div class="chip ${activeStatus===s.key?'active':''}" data-st="${s.key}">${s.label}</div>`).join('');
+  statusRow.innerHTML = allChip + chips;
+  statusRow.querySelectorAll('.chip').forEach(el=>{
+    el.addEventListener('click', ()=>{ activeStatus = el.dataset.st; render(); });
+  });
+}
+
+function filtered(){
+  const q = query.trim().toLowerCase();
+  return flyers.filter(f=>{
+    if(activeCat!=='all' && f.category!==activeCat) return false;
+    if(activeStatus!=='all' && f.status!==activeStatus) return false;
+    if(!q) return true;
+    const hay = [f.name, catMap[f.category]?.label, statusMap[f.status]?.label, f.date, f.stock].join(' ').toLowerCase();
+    return hay.includes(q);
+  }).sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+}
+
+function render(){
+  document.getElementById('totalCount').textContent = flyers.length;
+  renderTabs();
+  const items = filtered();
+  document.getElementById('resultLabel').textContent = `${items.length} 件表示`;
+  const list = document.getElementById('list');
+
+  if(items.length===0){
+    list.innerHTML = `<div class="empty-state">
+      <div class="glyph">🗂️</div>
+      <p>該当するチラシが見つかりません</p>
+      <p style="font-size:12px;">検索語やフィルターを変えてお試しください</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = items.map(f=>{
+    const cat = catMap[f.category] || CATS[0];
+    const st = statusMap[f.status] || STATUSES[0];
+    const stockLow = f.stock !== '' && f.stock !== 'なし' && !isNaN(Number(f.stock)) && Number(f.stock) <= 10;
+    const stockText = f.stock === '' ? '' : (f.stock === 'なし' ? '在庫なし' : `在庫 ${escapeHtml(f.stock)}`);
+    return `<div class="card">
+      <div class="stripe" style="background:${cat.color}"></div>
+      <div class="seal" style="background:${cat.color}">${(f.image || f.imageUrl) ? `<img src="${f.image || f.imageUrl}" alt="${escapeHtml(f.name)}" onerror="this.parentElement.textContent='${cat.label.slice(0,1)}'">` : cat.label.slice(0,1)}</div>
+      <div class="card-body">
+        <div class="card-top">
+          <div>
+            <div class="card-name">${escapeHtml(f.name)}</div>
+            <div class="card-meta">
+              <span>${cat.label}</span>
+              ${f.date ? `<span>・ ${escapeHtml(f.date)}</span>` : ''}
+              ${stockText ? `<span class="${stockLow?'stock-warn':''}">・ ${stockText}</span>` : ''}
+            </div>
+          </div>
+          <div class="stamp" style="color:${st.color}">${st.label}</div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="icon-btn" data-edit="${f.id}" aria-label="編集">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
+        <button class="icon-btn" data-del="${f.id}" aria-label="削除">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-edit]').forEach(el=>{
+    el.addEventListener('click', ()=> openModal(el.dataset.edit));
+  });
+  list.querySelectorAll('[data-del]').forEach(el=>{
+    el.addEventListener('click', ()=> deleteFlyer(el.dataset.del));
+  });
+}
+
+function deleteFlyer(id){
+  const f = flyers.find(x=>x.id===id);
+  if(!f) return;
+  if(!confirm(`「${f.name}」を削除しますか？`)) return;
+  flyers = flyers.filter(x=>x.id!==id);
+  render();
+  showToast('削除しました');
+  deleteFlyerKeyBackground(id);
+}
+
+let modalImageData = null;
+let modalImageRemoved = false;
+
+function openModal(id){
+  editingId = id || null;
+  const f = id ? flyers.find(x=>x.id===id) : null;
+  modalImageData = f && f.image ? f.image : null;
+  modalImageRemoved = false;
+  const previewSrc = modalImageData || (f && f.imageUrl) || null;
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h2>${f ? 'チラシを編集' : '新規チラシを追加'}</h2>
+        <div class="image-field">
+          <div class="image-preview" id="imgPreview">${previewSrc?`<img src="${previewSrc}" alt="">`:'🗂️'}</div>
+          <div class="image-btns">
+            <button type="button" id="imgPickBtn">画像を選択</button>
+            <button type="button" class="remove" id="imgRemoveBtn" style="${modalImageData?'':'display:none;'}">画像を削除</button>
+            <span style="font-size:11px;color:var(--ink-soft);">貼り付け(Ctrl+V)可・今開いている間だけ表示されます</span>
+          </div>
+          <input type="file" id="imgFile" accept="image/*" style="display:none;">
+        </div>
+        <div class="field">
+          <label for="fImageUrl">画像URL(任意・保存されて次回も表示されます)</label>
+          <input id="fImageUrl" type="text" value="${f&&f.imageUrl?escapeHtml(f.imageUrl):''}" placeholder="例）https://...">
+        </div>
+        <div class="field">
+          <label for="fName">チラシ名</label>
+          <input id="fName" type="text" value="${f?escapeHtml(f.name):''}" placeholder="例）ホワイトニング">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="fDate">作成年月</label>
+            <input id="fDate" type="text" value="${f?escapeHtml(f.date):''}" placeholder="例）2026.7">
+          </div>
+          <div class="field">
+            <label for="fStock">在庫数</label>
+            <input id="fStock" type="text" value="${f?escapeHtml(f.stock):''}" placeholder="例）2000 / なし">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="fCat">カテゴリー</label>
+            <select id="fCat">
+              ${CATS.map(c=>`<option value="${c.key}" ${f&&f.category===c.key?'selected':''}>${c.label}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label for="fStatus">区別</label>
+            <select id="fStatus">
+              ${STATUSES.map(s=>`<option value="${s.key}" ${f&&f.status===s.key?'selected':''}>${s.label}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="cancelBtn">キャンセル</button>
+          <button class="btn btn-primary" id="saveBtn">${f?'更新する':'追加する'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('cancelBtn').addEventListener('click', closeModal);
+  document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
+  document.getElementById('saveBtn').addEventListener('click', submitModal);
+
+  const fileInput = document.getElementById('imgFile');
+  document.getElementById('imgPickBtn').addEventListener('click', ()=> fileInput.click());
+  document.getElementById('imgRemoveBtn').addEventListener('click', ()=>{
+    modalImageData = null;
+    modalImageRemoved = true;
+    const urlVal = document.getElementById('fImageUrl').value.trim();
+    document.getElementById('imgPreview').innerHTML = urlVal ? `<img src="${urlVal}" alt="">` : '🗂️';
+    document.getElementById('imgRemoveBtn').style.display = 'none';
+  });
+  fileInput.addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(!file.type.startsWith('image/')){ showToast('画像ファイルを選択してください'); return; }
+    try{
+      const dataUrl = await compressImage(file, 480, 0.75);
+      modalImageData = dataUrl;
+      document.getElementById('imgPreview').innerHTML = `<img src="${dataUrl}" alt="">`;
+      document.getElementById('imgRemoveBtn').style.display = 'block';
+    }catch(err){
+      showToast('画像の読み込みに失敗しました');
+    }
+  });
+
+  document.getElementById('overlay').addEventListener('paste', async (e)=>{
+    const items = e.clipboardData && e.clipboardData.items;
+    if(!items) return;
+    for(const item of items){
+      if(item.type && item.type.startsWith('image/')){
+        const file = item.getAsFile();
+        if(!file) continue;
+        try{
+          const dataUrl = await compressImage(file, 480, 0.75);
+          modalImageData = dataUrl;
+          document.getElementById('imgPreview').innerHTML = `<img src="${dataUrl}" alt="">`;
+          document.getElementById('imgRemoveBtn').style.display = 'block';
+          showToast('画像を貼り付けました');
+        }catch(err){
+          showToast('画像の読み込みに失敗しました');
+        }
+        break;
+      }
+    }
+  });
+
+  document.getElementById('fName').focus();
+}
+
+function compressImage(file, maxDim, quality){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = ()=> reject(new Error('read failed'));
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onerror = ()=> reject(new Error('image decode failed'));
+      img.onload = ()=>{
+        let {width, height} = img;
+        if(width > maxDim || height > maxDim){
+          if(width > height){ height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function closeModal(){
+  document.getElementById('modalRoot').innerHTML = '';
+  editingId = null;
+}
+
+async function submitModal(){
+  const name = document.getElementById('fName').value.trim();
+  if(!name){ showToast('チラシ名を入力してください'); return; }
+  const date = document.getElementById('fDate').value.trim();
+  const stock = document.getElementById('fStock').value.trim();
+  const category = document.getElementById('fCat').value;
+  const status = document.getElementById('fStatus').value;
+  const imageUrl = document.getElementById('fImageUrl').value.trim();
+
+  let record, isNew = false;
+  if(editingId){
+    record = flyers.find(x=>x.id===editingId);
+    Object.assign(record, {name, date, stock, category, status, imageUrl, image: modalImageData});
+  }else{
+    isNew = true;
+    record = {id:'f-'+Date.now()+'-'+Math.random().toString(36).slice(2,7), name, date, stock, category, status, imageUrl, image: modalImageData};
+  }
+
+  if(isNew) flyers.push(record);
+  closeModal();
+  render();
+  showToast(editingId ? '更新しました' : '追加しました');
+
+  // Best-effort background sync — never blocks the UI from updating.
+  syncFlyerInBackground(record, false);
+}
+
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  query = e.target.value;
+  document.getElementById('clearSearch').style.display = query ? 'block' : 'none';
+  render();
+});
+document.getElementById('clearSearch').addEventListener('click', ()=>{
+  query='';
+  document.getElementById('searchInput').value='';
+  document.getElementById('clearSearch').style.display='none';
+  render();
+});
+document.getElementById('addBtn').addEventListener('click', ()=> openModal(null));
+
+document.getElementById('exportBtn').addEventListener('click', exportData);
+document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(file) importDataFromFile(file);
+  e.target.value = '';
+});
+
+loadData();
+</script>
+</body>
+</html>
